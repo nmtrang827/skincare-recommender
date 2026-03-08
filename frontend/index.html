@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Skincare Recommender</title>
+    </head>
+    <body>
+        <h1>Skincare Product Recommender</h1>
+
+        <label>Maximum Budget</label>
+        <input type="number" id="budget" min="0" value="50">
+
+        <br><br>
+
+        <label>Acne Severity</label>
+        <input type="number" id="acne" min="0" max="10" value="0">
+
+        <br><br>
+
+        <label>Dryness Severity</label>
+        <input type="number" id="dryness" min="0" max="10" value="0">
+
+        <br><br>
+
+        <label>Pigmentation Severity</label>
+        <input type="number" id="pigmentation" min="0" max="10" value="0">
+
+        <br><br>
+
+        <label>Aging Severity</label>
+        <input type="number" id="aging" min="0" max="10" value="0">
+
+        <br><br>
+
+        <label>Sensitivity Severity</label>
+        <input type="number" id="sensitivity" min="0" max="10" value="0">
+
+        <br><br>
+
+        <button onclick="getRecommendations()">Recommend Products</button>
+
+        <h2>Results</h2>
+
+        <div id="results"></div>
+
+        <script src="script.js"></script>
+    </body>
+</html>

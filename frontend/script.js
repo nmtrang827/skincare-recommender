@@ -49,11 +49,8 @@ async function getRecommendations() {
         return val;
     }
 
-    // Convert numeric budget to category
-    const budgetAmount = Number(document.getElementById("budget").value);
-    let budgetLevel = "High";
-    if (budgetAmount <= 20) budgetLevel = "Low";
-    else if (budgetAmount <= 50) budgetLevel = "Medium";
+    // Get budget level directly from select dropdown
+    const budgetLevel = document.getElementById("budget").value;
     
     const user = {
         Budget_Level: budgetLevel,

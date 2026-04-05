@@ -49,8 +49,14 @@ async function getRecommendations() {
         return val;
     }
 
+    // Convert numeric budget to category
+    const budgetAmount = Number(document.getElementById("budget").value);
+    let budgetLevel = "High";
+    if (budgetAmount <= 20) budgetLevel = "Low";
+    else if (budgetAmount <= 50) budgetLevel = "Medium";
+    
     const user = {
-        budget: Number(document.getElementById("budget").value),
+        Budget_Level: budgetLevel,
         Acne_Severity: cap(document.getElementById("acne").value),
         Dryness_Severity: cap(document.getElementById("dryness").value),
         Pigmentation_Severity: cap(document.getElementById("pigmentation").value),

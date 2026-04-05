@@ -76,29 +76,49 @@ async function getRecommendations() {
         "Other": "https://centreforpureskin.com/themes/user/site/default/asset/img/blog/10.23_Blog_2_.0.jpg"
     };
 
-    const response = await fetch("http://127.0.0.1:5000/recommend_tfidf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(user)
-    });
-
-    const data = await response.json();
     const resultsDiv = document.getElementById("results");
-    resultsDiv.innerHTML = "";
+    resultsDiv.innerHTML = "<p>Loading recommendations...</p>";
 
-    data.forEach((product, index) => {
-        const imageUrl = typeImages[product.type] || typeImages["Other"];
-        resultsDiv.innerHTML += `
-        <div class="product-card">
-            <div class="product-image" style="background-image: url('${imageUrl}');"></div>
-            <div class="product-info">
-                <h3>${product.name}</h3>
-                <p><strong>Type:</strong> ${product.type}</p>
-                <p><strong>Price:</strong> $${product.price}</p>
-                <p><strong>Active Ingredients:</strong> ${product.active_ingredients.join(", ")}</p>
-                <a href="${product.url}" target="_blank">View Product 🔗</a>
+    try {
+        const response = await fetch("http://127.0.0.1:5000/recommend_tfidf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(user)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        resultsDiv.innerHTML = "";
+
+        if (data.length === 0) {
+            resultsDiv.innerHTML = "<p>No products found matching your criteria.</p>";
+            return;
+        }
+
+        data.forEach((product, index) => {
+            const imageUrl = typeImages[product.type] || typeImages["Other"];
+            resultsDiv.innerHTML += `
+            <div class="product-card">
+                <div class="product-image" style="background-image: url('${imageUrl}');"></div>
+                <div class="product-info">
+                    <h3>${product.name}</h3>
+                    <p><strong>Type:</strong> ${product.type}</p>
+                    <p><strong>Price:</strong> $${product.price}</p>
+                    <p><strong>Active Ingredients:</strong> ${product.active_ingredients.join(", ")}</p>
+                    <a href="${product.url}" target="_blank">View Product 🔗</a>
+                </div>
             </div>
-        </div>
+            `;
+        });
+    } catch (error) {
+        resultsDiv.innerHTML = `
+            <p style="color: red; font-weight: bold;">❌ Error: ${error.message}</p>
+            <p>Make sure the backend server is running:</p>
+            <code>cd backend && python server.py</code>
         `;
-    });
+        console.error("Error fetching recommendations:", error);
+    }
 }

@@ -14,12 +14,24 @@ for p in products:
         p["clean_ingreds"] = []
 
 # %%
-for p in products:
-    price_str = str(p.get("price", "0")).replace("£", "").strip()
+def clean_price(price_val):
+    if price_val is None:
+        return None
+
+    price_str = str(price_val).strip()
+    price_str = price_str.replace("£", "").replace("$", "").replace(",", "")
+
+    if price_str == "" or price_str.lower() in ["nan", "none", "null", "n/a"]:
+        return None
+
     try:
-        p["price"] = float(price_str)
-    except:
-        p["price"] = 0.0
+        return float(price_str)
+    except ValueError:
+        return None
+
+
+for p in products:
+    p["price"] = clean_price(p.get("price"))
 
 # %%
 with open("../data/users.json", "r", encoding="utf-8") as f:
@@ -162,12 +174,20 @@ for p in products:
                                if ing.lower().strip() in active_ingredients]
 
 # %%
-def rec_hybrid(user, products, top_n=8, alpha=0.5, beta = 0.1):
+budget_limits = {
+    "Low": 20,
+    "Medium": 50,
+    "High": 200,
+}
+
+def rec_hybrid(user, products, top_n=8, alpha=0.5, beta=0.1):
     query = []
+
     for concern, ingredients in concern_to_ingredients.items():
         severity = user.get(concern, 0)
         if severity > 1:
             query.extend(ingredients)
+
     query_text = " ".join(query)
     query_vec = vectorizer.transform([query_text])
 
@@ -175,19 +195,30 @@ def rec_hybrid(user, products, top_n=8, alpha=0.5, beta = 0.1):
     scores = similarities.flatten()
 
     scored_products = []
-    budget = user.get("budget", float("inf"))
+
+    max_price = budget_limits.get(user.get("Budget_Level"), 200)
 
     for i, p in enumerate(products):
         rule_score = score_rule_based(p, user)
         hybrid_score = alpha * rule_score + (1 - alpha) * scores[i]
 
-        price = p.get("price",0)
-        if price > budget:
-            hybrid_score -= beta * (price - budget)
+        price = p.get("price")
+
+        # skip products with missing price
+        if price is None:
+            continue
+
+        # remove products over budget
+        if price > max_price:
+            continue
+
+        # small bonus for products well under budget
+        if price <= max_price * 0.7:
+            hybrid_score += beta
 
         if hybrid_score > 0:
             scored_products.append((p, hybrid_score))
-    
+
     scored_products.sort(key=lambda x: x[1], reverse=True)
     return scored_products[:top_n]
 

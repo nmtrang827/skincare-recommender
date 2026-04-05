@@ -1,46 +1,3 @@
-// async function getRecommendations() {
-//     function cap(val) {
-//         val = Number(val);
-//         if (val < 0) return 0;
-//         if (val > 10) return 10;
-//         return val;
-//     }
-
-//     const user = {
-//         Budget: Number(document.getElementById("budget").value),
-//         Acne_Severity: cap(document.getElementById("acne").value),
-//         Dryness_Severity: cap(document.getElementById("dryness").value),
-//         Pigmentation_Severity: cap(document.getElementById("pigmentation").value),
-//         Aging_Severity: cap(document.getElementById("aging").value),
-//         Sensitivity_Severity: cap(document.getElementById("sensitivity").value)
-//     }
-
-//     const response = await fetch("http://127.0.0.1:5000/recommend_tfidf", {
-//         method:"POST",
-//         headers:{"Content-Type":"application/json"},
-//         body:JSON.stringify(user)
-//     })
-
-//     const data = await response.json();
-//     const resultsDiv = document.getElementById("results")
-//     resultsDiv.innerHTML = "";
-
-//     data.forEach(product=>{
-//         resultsDiv.innerHTML += `
-//         <div class="product-card">
-//             <div class="product-image"></div>
-//             <div class="product-info">
-//                 <h3>${product.name}</h3>
-//                 <p><strong>Type:</strong> ${product.type}</p>
-//                 <p><strong>Price:</strong> $${product.price}</p>
-//                 <p><strong>Ingredients:</strong> ${product.active_ingredients.join(", ")}</p>
-//                 <a href="${product.url}" target="_blank">View Product 🔗</a>
-//             </div>
-//         </div>
-//         `;
-//     })
-// }
-
 async function getRecommendations() {
     function cap(val) {
         val = Number(val);
@@ -49,11 +6,8 @@ async function getRecommendations() {
         return val;
     }
 
-    // Get budget level directly from select dropdown
-    const budgetLevel = document.getElementById("budget").value;
-    
     const user = {
-        Budget_Level: budgetLevel,
+        Budget_Level: document.getElementById("budget").value,
         Acne_Severity: cap(document.getElementById("acne").value),
         Dryness_Severity: cap(document.getElementById("dryness").value),
         Pigmentation_Severity: cap(document.getElementById("pigmentation").value),
@@ -74,7 +28,7 @@ async function getRecommendations() {
     };
 
     const resultsDiv = document.getElementById("results");
-    resultsDiv.innerHTML = "<p>Loading recommendations...</p>";
+    resultsDiv.innerHTML = '<div class="loading">Analyzing your skin profile...</div>';
 
     try {
         const response = await fetch("http://127.0.0.1:5000/recommend_tfidf", {
@@ -91,30 +45,33 @@ async function getRecommendations() {
         resultsDiv.innerHTML = "";
 
         if (data.length === 0) {
-            resultsDiv.innerHTML = "<p>No products found matching your criteria.</p>";
+            resultsDiv.innerHTML = '<div class="no-results">No products found matching your criteria. Please adjust your budget range or skin concern ratings.</div>';
             return;
         }
 
         data.forEach((product, index) => {
             const imageUrl = typeImages[product.type] || typeImages["Other"];
+            const delay = (index + 1) * 0.1; // 0.1s delay between each card
             resultsDiv.innerHTML += `
-            <div class="product-card">
+            <div class="product-card" style="animation-delay: ${delay}s;">
                 <div class="product-image" style="background-image: url('${imageUrl}');"></div>
                 <div class="product-info">
                     <h3>${product.name}</h3>
                     <p><strong>Type:</strong> ${product.type}</p>
-                    <p><strong>Price:</strong> $${product.price}</p>
+                    <p class="price"><strong>Price:</strong> $${product.price}</p>
                     <p><strong>Active Ingredients:</strong> ${product.active_ingredients.join(", ")}</p>
-                    <a href="${product.url}" target="_blank">View Product 🔗</a>
+                    <a href="${product.url}" target="_blank">View Product Details</a>
                 </div>
             </div>
             `;
         });
     } catch (error) {
         resultsDiv.innerHTML = `
-            <p style="color: red; font-weight: bold;">❌ Error: ${error.message}</p>
-            <p>Make sure the backend server is running:</p>
-            <code>cd backend && python server.py</code>
+            <div class="error">
+                <strong>Connection Error:</strong> ${error.message}<br><br>
+                <small>Please ensure the backend server is running:<br>
+                <code>cd backend && python server.py</code></small>
+            </div>
         `;
         console.error("Error fetching recommendations:", error);
     }

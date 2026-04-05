@@ -1,6 +1,11 @@
-# Skincare Product Recommender
+Setup
 
-backend
+Backend
 
-pip install flask flask-cors scikit-learn pandas
+cd backend
+pip install flask flask-cors scikit-learn pandas requests
 python server.py
+
+
+Frontend
+Open `frontend/index.html` in your web browser.
